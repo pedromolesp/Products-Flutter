@@ -14,4 +14,35 @@ class ProductProvider {
     print(decodedData);
     return true;
   }
+
+  Future<bool> updateProduct(ProductModel product) async {
+    final url = "$_url/productos/${product.id}.json";
+    final response = await http.put(url, body: productModelToJson(product));
+    final decodedData = json.decode(response.body);
+    print(decodedData);
+    return true;
+  }
+
+  Future<List<ProductModel>> loadProducts() async {
+    final url = "$_url/productos.json";
+    final resp = await http.get(url);
+    final Map<String, dynamic> decodedData = json.decode(resp.body);
+    final List<ProductModel> products = List();
+    if (decodedData == null) return [];
+
+    decodedData.forEach((key, value) {
+      final prod = ProductModel.fromJson(value);
+      prod.id = key;
+
+      products.add(prod);
+    });
+    return products;
+  }
+
+  Future<int> deleteProduct(String id) async {
+    final url = "$_url/productos/$id.json";
+    final resp = await http.delete(url);
+    print(resp.body);
+    return 1;
+  }
 }

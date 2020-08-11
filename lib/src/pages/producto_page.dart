@@ -10,12 +10,20 @@ class ProductoPage extends StatefulWidget {
 
 class _ProductoPageState extends State<ProductoPage> {
   final formKey = GlobalKey<FormState>();
+  final scafoldKey = GlobalKey<ScaffoldState>();
+
   ProductModel product = new ProductModel();
   final productProvider = new ProductProvider();
-
+  bool _saving = false;
   @override
   Widget build(BuildContext context) {
+    final ProductModel productFromHome =
+        ModalRoute.of(context).settings.arguments;
+    if (productFromHome != null) {
+      product = productFromHome;
+    }
     return Scaffold(
+      key: scafoldKey,
       appBar: AppBar(
         title: Text("Producto"),
         actions: <Widget>[
@@ -84,9 +92,11 @@ class _ProductoPageState extends State<ProductoPage> {
 
   _crearBoton() {
     return RaisedButton.icon(
-      onPressed: () {
-        _submit();
-      },
+      onPressed: _saving == null
+          ? null
+          : () {
+              _submit();
+            },
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       color: Colors.deepPurple,
       label: Text("Guardar"),
@@ -110,15 +120,31 @@ class _ProductoPageState extends State<ProductoPage> {
   void _submit() {
     if (formKey.currentState.validate()) {
       formKey.currentState.save();
+      setState(() {
+        _saving = true;
+      });
       print(product.titulo +
           "\n" +
           product.valor.toString() +
           "\n" +
           product.disponible.toString());
-
+      if (product.id == null) {}
       productProvider.createProduct(product);
+      showSnackbar("Registro guardado");
+      _saving = false;
     } else {
-      return;
+      productProvider.updateProduct(product);
+      showSnackbar("Registro actualizado");
+      _saving = false;
     }
+    Navigator.pop(context);
+  }
+
+  void showSnackbar(String message) {
+    final snackbar = SnackBar(
+      content: Text(message),
+      duration: Duration(milliseconds: 1500),
+    );
+    scafoldKey.currentState.showSnackBar(snackbar);
   }
 }
